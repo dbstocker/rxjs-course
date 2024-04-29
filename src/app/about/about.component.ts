@@ -14,9 +14,9 @@ import {
   AsyncSubject,
   ReplaySubject
 } from 'rxjs';
-import { delayWhen, filter, map, take, timeout } from 'rxjs/operators';
-import { createHttpObservable } from '../common/util';
+import { concatMap, delayWhen, filter, map, take, timeout } from 'rxjs/operators';
 
+import { createHttpObservable, createHttpObservable$ } from '../common/util';
 
 @Component({
   selector: 'about',
@@ -87,24 +87,38 @@ export class AboutComponent implements OnInit {
             });
     }); */
 
-    const fetch$ = new Observable((observer) => {
-      fetch('/api/courses')
-        .then((response) => {
-          return response.json;
-        })
-        .then((body) => {
-          observer.next(body);
-          observer.complete();
-        })
-        .catch((error) => {
-          observer.error(error);
-        });
-    });
+    const fetch$ = createHttpObservable$('/api/courses');
 
-    fetch$.subscribe(
+    /* fetch$.subscribe(
       (data) => console.log(data),
       (error) => console.error(error), // or noop if no error is possible
       () => console.log('fetch complete')
-    );
+    ); */
+
+    const source0$ = of('\n\noutput tag');
+    const source1$ = of(1, 2, 3);
+    const source2$ = of(4, 5, 6);
+    const source3$ = of('a', 'b', 'c');
+
+    const result$ = concat(source0$, source1$, source2$, source3$);
+  
+    result$
+      .subscribe((output) => console.log(output));
+
+    // * passing a reference to a function instead of invoking it
+    // * ...in this instance, the console.log function
+
+    result$
+      .subscribe(console.log);
+
+    // * observables must complete for concat() to emit
+    // * subsequent observables passed in the output stream
+    const sourceInf$ = interval(500);
+
+    const foreverTimer$ = concat(sourceInf$, source1$);
+
+    foreverTimer$
+      .subscribe(console.log);
   }
 }
+
