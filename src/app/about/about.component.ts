@@ -89,13 +89,17 @@ export class AboutComponent implements OnInit {
 
     const fetch$ = createHttpObservable$('/api/courses');
 
+    const fetchSub = fetch$.subscribe(console.log);
+
+    setTimeout(() => fetchSub.unsubscribe(), 0)
+
     /* fetch$.subscribe(
       (data) => console.log(data),
       (error) => console.error(error), // or noop if no error is possible
       () => console.log('fetch complete')
     ); */
 
-    const source0$ = of('\n\noutput tag');
+    /* const source0$ = of('\n\noutput tag');
     const source1$ = of(1, 2, 3);
     const source2$ = of(4, 5, 6);
     const source3$ = of('a', 'b', 'c');
@@ -118,7 +122,18 @@ export class AboutComponent implements OnInit {
     const foreverTimer$ = concat(sourceInf$, source1$);
 
     foreverTimer$
+      .subscribe(console.log); */
+    
+    const interval1$ = interval(1000);
+
+    const interval2$ = interval1$.pipe(map((val) => val * 10));
+
+    const result$ = merge(interval1$, interval2$);
+
+    const subscription = result$
       .subscribe(console.log);
+
+      setTimeout(() => subscription.unsubscribe(), 5000);
   }
 }
 

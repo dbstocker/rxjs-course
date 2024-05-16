@@ -47,5 +47,7 @@ export function createHttpObservable$(url: string) {
       .catch((error) => {
         observer.error(error);
       });
+
+    return () => controller.abort();
   });
 }

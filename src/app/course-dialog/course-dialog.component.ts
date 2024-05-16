@@ -19,7 +19,7 @@ export class CourseDialogComponent implements AfterViewInit {
 
   course: Course;
 
-  @ViewChild('saveButton', { static: true }) saveButton: ElementRef;
+  @ViewChild('saveButton', { static: true, read: ElementRef }) saveButton: ElementRef;
 
   @ViewChild('searchInput', { static: true }) searchInput: ElementRef;
 
@@ -56,26 +56,34 @@ export class CourseDialogComponent implements AfterViewInit {
           method: 'PUT',
           body: JSON.stringify(changes),
           headers: {
-            'content-type': 'application/json'
+            'content-type': 'application/aqg'
           }
         }));
 
         saveCourse$.subscribe();
       }); */
 
-    /**
-     * * elegantly waits for stream to complete emitting before
-     * * sending changes to API
-     */
     this.form.valueChanges
       .pipe((
         filter(() => this.form.valid),
-        concatMap((changes) => this.preSave(changes))
+        /**
+         * * elegantly waits for stream to complete emitting before
+         * * sending changes to API using concatMap. use whenever
+         * * the order of emitted values is important and needs to
+         * * be preserved.
+         */
+        // concatMap((changes) => this.saveCourse(changes))
+        /**
+         * * fires all emitted observable values in parallel, not
+         * * waiting for the previous values' emissions to complete.
+         * * use when order of emitted values doesn't matter
+         */
+        mergeMap((changes) => this.saveCourse(changes))
       ))
-      .subscribe()
+      .subscribe();
   }
 
-  preSave(changes) {
+  saveCourse(changes) {
     return fromPromise(fetch(`/api/courses/${this.course.id}`, {
       method: 'PUT',
       body: JSON.stringify(changes),
@@ -86,23 +94,28 @@ export class CourseDialogComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-
+    fromEvent(this.saveButton.nativeElement, 'click')
+      .pipe(
+        /**
+         * * when the first value is emitted, ignore subsequent
+         * * values until the current observable is complete by
+         * * using exhaustMap
+         */
+        exhaustMap(() => this.saveCourse(this.form.value))
+      )
+      .subscribe();
   }
 
   save() {
-    this.store.saveCourse(this.course.id, this.form.value)
-      .subscribe(
-        () => this.close(),
-        err => console.log("Error saving course", err)
-      );
+    // console.log('save()');
+    // this.store.saveCourse(this.course.id, this.form.value)
+    //   .subscribe(
+    //     () => this.close(),
+    //     err => console.log("Error saving course", err)
+    //   );
   }
-
-
-
 
   close() {
     this.dialogRef.close();
   }
-
-
 }
