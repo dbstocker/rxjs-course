@@ -15,10 +15,11 @@ import {
   throttle,
   throttleTime
 } from 'rxjs/operators';
-import { merge, fromEvent, Observable, concat, interval } from 'rxjs';
+import { merge, fromEvent, Observable, concat, interval, forkJoin } from 'rxjs';
 import { Lesson } from '../model/lesson';
 import { createHttpObservable } from '../common/util';
 import { Store } from '../common/store.service';
+import { debug, RxJsLoggingLevel, setRxJsLoggingLevel } from '../common/debug';
 
 @Component({
   selector: 'course',
@@ -37,8 +38,25 @@ export class CourseComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.courseId = this.route.snapshot.params['id'];
 
-    this.course$ = createHttpObservable(`/api/courses/${this.courseId}`);
+    /* this.course$ = createHttpObservable(`/api/courses/${this.courseId}`)
+      .pipe(
+        // tap((course) => console.log('course', course))
+        debug(RxJsLoggingLevel.INFO, 'course')
+      ); */
 
+    const course$ = createHttpObservable(`/api/courses/${this.courseId}`);
+    const lessons$ = this.loadLessons('');
+
+    forkJoin([course$, lessons$])
+      .pipe(
+        tap(([course, lessons]) => {
+          console.log(course);
+          console.log(lessons);
+        })
+      )
+      .subscribe();
+
+    setRxJsLoggingLevel(RxJsLoggingLevel.DEBUG);
   }
 
   ngAfterViewInit() {
@@ -61,8 +79,11 @@ export class CourseComponent implements OnInit, AfterViewInit {
     .pipe(
       map((event: KeyboardEvent) => (event.target as HTMLInputElement).value),
       startWith(''),
+      // tap((search) => console.log('search', search)),
+      debug(RxJsLoggingLevel.TRACE, 'search'),
       distinctUntilChanged(),
-      switchMap((search) => this.loadLessons(search))
+      switchMap((search) => this.loadLessons(search)),
+      debug(RxJsLoggingLevel.DEBUG, 'lessons')
     );
 
     // * debounceTime() vs throttle()
@@ -72,14 +93,14 @@ export class CourseComponent implements OnInit, AfterViewInit {
     // * for example, after specific intervals of time
     // * throttleTime() is equivalent to using throttle() and passing an
     // * interval()
-    fromEvent<KeyboardEvent>(this.input.nativeElement, 'keyup')
-      .pipe(
-        map((event: KeyboardEvent) => (event.target as HTMLInputElement).value),
-        startWith(''),
-        // debounceTime(400)
-        // throttle(() => interval(400))
-        throttleTime(400)
-      ).subscribe(console.log);
+    // fromEvent<KeyboardEvent>(this.input.nativeElement, 'keyup')
+    //   .pipe(
+    //     map((event: KeyboardEvent) => (event.target as HTMLInputElement).value),
+    //     startWith(''),
+    //     // debounceTime(400)
+    //     // throttle(() => interval(400))
+    //     throttleTime(400)
+    //   ).subscribe(console.log);
   }
 
   // loadLessons(search = ''): Observable<Lesson[]> { // * provide an initial value to the 
