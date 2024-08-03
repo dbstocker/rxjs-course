@@ -24,12 +24,13 @@ import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
 import { MatToolbarModule } from "@angular/material/toolbar";
-import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import { CourseDialogComponent } from './course-dialog/course-dialog.component';
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatMomentDateModule} from "@angular/material-moment-adapter";
 
-@NgModule({ declarations: [
+@NgModule({
+    declarations: [
         AppComponent,
         HomeComponent,
         AboutComponent,
@@ -37,8 +38,10 @@ import {MatMomentDateModule} from "@angular/material-moment-adapter";
         CoursesCardListComponent,
         CourseDialogComponent
     ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
+    imports: [
+        BrowserModule,
         BrowserAnimationsModule,
+        HttpClientModule,
         MatMenuModule,
         MatButtonModule,
         MatIconModule,
@@ -57,6 +60,10 @@ import {MatMomentDateModule} from "@angular/material-moment-adapter";
         MatSelectModule,
         MatDatepickerModule,
         MatMomentDateModule,
-        ReactiveFormsModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
+        ReactiveFormsModule
+    ],
+    providers: [],
+    bootstrap: [AppComponent]
+})
 export class AppModule {
 }
