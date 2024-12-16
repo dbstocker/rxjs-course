@@ -44,6 +44,9 @@ export class CourseDialogComponent implements AfterViewInit {
 
     }
 
+    save() {
+      console.log('save clicked');
+    }
 
 
     close() {
